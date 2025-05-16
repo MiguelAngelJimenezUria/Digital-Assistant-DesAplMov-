@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Digital Assistant"
 include(":app")
+
