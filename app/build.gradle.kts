@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    //Google services plugins
     id("com.google.gms.google-services")
 }
 
@@ -58,15 +60,14 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    //FireBase y google services dependencias
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.crashlytics)
+    //implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     //implementation(libs.firebase.realtime)
     implementation(libs.firebase.config)
-
-    implementation(libs.coil)
-
+    //implementation(libs.coil)
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
