@@ -51,7 +51,7 @@ import kotlin.math.round
 
 @Preview
 @Composable
-fun InitialScreen() {
+fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignUp: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -68,12 +68,15 @@ fun InitialScreen() {
         Text(
             text = "Digital Assistant",
             color = Color.White,
-            fontSize = 38.sp,
-            fontWeight = FontWeight.Bold
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Normal
         )
         Spacer(modifier = Modifier.weight(1f))
+
+
         //Botones de inicio de sesion y registro
-        Button(onClick = { },
+        Button(
+            onClick = { navigateToLogin() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 35.dp, vertical = 5.dp)
@@ -92,7 +95,7 @@ fun InitialScreen() {
             )
         }
         //Spacer(modifier = Modifier.height(50.dp)) //Este espacio es experiemntal para la separacion de los botones
-        Button(onClick = { },
+        Button(onClick = { navigateToSignUp() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 35.dp, vertical = 5.dp)
@@ -112,7 +115,7 @@ fun InitialScreen() {
 
         // Línea divisoria
         Divider(
-            color = Color.Gray,
+            color = Color.White,
             thickness = 1.dp,
             modifier = Modifier
                 .fillMaxWidth()

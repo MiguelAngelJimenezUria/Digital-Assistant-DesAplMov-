@@ -10,7 +10,7 @@ activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 
 #FIRE BASE y google services versions
-firebaseBom = "33.1.1"
+firebaseBom = "33.13.0"  # Actualizar a la última versión
 services = "4.4.2"
 #crashlytics = "3.0.2"
 navigationCompose = "2.7.7"

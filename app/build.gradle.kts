@@ -60,17 +60,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    //FireBase y google services dependencias
-    implementation(platform(libs.firebase.bom))
-    //implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.auth)
+    //Firebase y google services dependencias
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0")) // Verifica la versión más reciente en Firebase docs
+    implementation("com.google.firebase:firebase-auth-ktx")
     implementation(libs.firebase.firestore)
-    //implementation(libs.firebase.realtime)
     implementation(libs.firebase.config)
-    //implementation(libs.coil)
-    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 }
