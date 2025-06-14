@@ -1,10 +1,12 @@
 package com.shrimpdevs.digitalassistant.models
+
 import com.google.firebase.Timestamp
+import java.io.Serializable
 
 data class Event(
-    val title: String,
-    val description: String,
-    val eventDate: Timestamp,
-    val location: String,
-    val alarm: Boolean,
-)
+    var title: String = "",
+    var description: String = "",
+    var eventDate: Timestamp = Timestamp.now(),
+    var location: String = "",
+    var alarm: Boolean = false
+) : Serializable

@@ -3,61 +3,32 @@ package com.shrimpdevs.digitalassistant.screens.event
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.google.firebase.Timestamp
+import androidx.compose.ui.unit.sp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.shrimpdevs.digitalassistant.R
 import com.shrimpdevs.digitalassistant.models.Event
-import com.shrimpdevs.digitalassistant.ui.theme.Black
-import com.shrimpdevs.digitalassistant.ui.theme.DarkBlue
-import com.shrimpdevs.digitalassistant.ui.theme.DarkText
-import com.shrimpdevs.digitalassistant.ui.theme.White
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Switch
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.sp
-import com.shrimpdevs.digitalassistant.ui.theme.BackgroundTextField
-import com.shrimpdevs.digitalassistant.ui.theme.SelectedField
-
-
-// Assuming these are defined in your project
-// import com.yourpackage.R // For R.drawable.ic_back
-// import com.yourpackage.ui.theme.BackgroundTextField
-// import com.yourpackage.ui.theme.Black
-// import com.yourpackage.ui.theme.DarkBlue
-// import com.yourpackage.ui.theme.DarkText
-// import com.yourpackage.ui.theme.SelectedField
-// import com.yourpackage.ui.theme.White
-// import com.yourpackage.model.Event // For your Event data class
+import com.shrimpdevs.digitalassistant.ui.theme.*
 
 @Composable
-fun CreateEvent(db: FirebaseFirestore, navigateToEvent: () -> Unit) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var alarm by remember { mutableStateOf(false) }
+fun EditEvent(
+    db: FirebaseFirestore,
+    event: Event,
+    navigateBack: () -> Unit
+) {
+    var title by remember { mutableStateOf(event.title) }
+    var description by remember { mutableStateOf(event.description) }
+    var location by remember { mutableStateOf(event.location) }
+    var alarm by remember { mutableStateOf(event.alarm) }
 
     Column(
         modifier = Modifier
@@ -71,15 +42,15 @@ fun CreateEvent(db: FirebaseFirestore, navigateToEvent: () -> Unit) {
             contentDescription = "Back Icon",
             tint = White,
             modifier = Modifier
-                .padding(top = 35.dp)
-                .clickable { navigateToEvent() }
+                .padding(top = 20.dp)
+                .clickable { navigateBack() }
                 .align(Alignment.Start)
                 .size(45.dp)
                 .shadow(10.dp, shape = RoundedCornerShape(15.dp))
         )
 
         Text(
-            text = "Crear Evento",
+            text = "Editar Evento",
             color = White,
             fontSize = 24.sp,
             modifier = Modifier.padding(vertical = 16.dp)
@@ -139,14 +110,14 @@ fun CreateEvent(db: FirebaseFirestore, navigateToEvent: () -> Unit) {
 
         Button(
             onClick = {
-                val event = Event(
+                val updatedEvent = Event(
                     title = title,
                     description = description,
-                    eventDate = Timestamp.now(),
+                    eventDate = event.eventDate,
                     location = location,
                     alarm = alarm
                 )
-                createEvent(db, event, navigateToEvent)
+                updateEvent(db, event.title, updatedEvent, navigateBack)
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -154,20 +125,29 @@ fun CreateEvent(db: FirebaseFirestore, navigateToEvent: () -> Unit) {
                 .shadow(10.dp),
             colors = ButtonDefaults.buttonColors(containerColor = DarkText)
         ) {
-            Text("Guardar Evento")
+            Text("Guardar Cambios")
         }
     }
 }
 
-fun createEvent(db: FirebaseFirestore, event: Event, onSuccess: () -> Unit) {
+private fun updateEvent(
+    db: FirebaseFirestore,
+    originalTitle: String,
+    updatedEvent: Event,
+    onSuccess: () -> Unit
+) {
     db.collection("events")
-        .add(event)
-        .addOnSuccessListener {
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                onSuccess()
-            }, 500)
-        }
-        .addOnFailureListener {
-            Log.e("CreateEvent", "Error al crear evento", it)
+        .whereEqualTo("title", originalTitle)
+        .get()
+        .addOnSuccessListener { documents ->
+            for (document in documents) {
+                document.reference.set(updatedEvent)
+                    .addOnSuccessListener {
+                        onSuccess()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("EditEvent", "Error al actualizar evento", e)
+                    }
+            }
         }
 }
