@@ -62,7 +62,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 @Composable
 fun LoginScreen(
     navigateToInitial: () -> Unit,
-    navigateToHome: () -> Unit,
+    navigateToEvent: () -> Unit,
     auth: FirebaseAuth
 ) {
 
@@ -183,7 +183,7 @@ fun LoginScreen(
                             Log.d("Login", "Inicio de sesión exitoso. Usuario: ${auth.currentUser?.email}")
                             // Limpiar cualquier mensaje de error previo
                             errorMessage = null
-                            navigateToHome()
+                            navigateToEvent()
                         } else {
                             val message = when(task.exception) {
                                 is FirebaseAuthInvalidCredentialsException -> "Credenciales inválidas: usuario o contraseña incorrectos"

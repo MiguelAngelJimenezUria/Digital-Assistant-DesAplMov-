@@ -58,7 +58,7 @@ import com.shrimpdevs.digitalassistant.ui.theme.LightBlue
 @Composable
 fun SignUpScreen(
     navigateToInitial: () -> Unit,
-    navigateToHome: () -> Unit,
+    navigateToEvent: () -> Unit,
     auth: FirebaseAuth
 ) {
     //var name by remember { mutableStateOf("") }
@@ -224,7 +224,7 @@ fun SignUpScreen(
                         if (task.isSuccessful) {
                             Log.i("SignUp", "User created successfully")
                             Toast.makeText(context, "Registro exitoso. ¡Bienvenido!", Toast.LENGTH_SHORT).show()
-                            navigateToHome() // Navega a la pantalla de inicio
+                            navigateToEvent() // Navega a la pantalla de inicio
                         } else {
                             // Manejo de errores específicos
                             val message = when (task.exception) {
