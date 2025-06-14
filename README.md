@@ -1,4 +1,4 @@
-# Digital Assistant
+![image](https://github.com/user-attachments/assets/c74add75-29ff-40d3-a442-18da6862dc3a)# Digital Assistant
 
 Aplicación móvil desarrollada en Android que permite gestionar eventos personales. Desarrollada con Jetpack Compose y Firebase.
 
