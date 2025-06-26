@@ -54,7 +54,7 @@ fun InitialScreen(
         GoogleSignIn.getClient(
             context,
             GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("TU_WEB_CLIENT_ID") // Reemplaza con tu ID de cliente web
+                .requestIdToken("615793980890-9e4lstr61rc63iqb9qbs0fpvds4t352f.apps.googleusercontent.com")
                 .requestEmail()
                 .build()
         )
