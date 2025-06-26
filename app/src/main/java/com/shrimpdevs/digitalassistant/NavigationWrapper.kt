@@ -35,7 +35,14 @@ fun NavigationWrapper(
         composable("initial") {
             InitialScreen(
                 navigateToLogin = { navHostController.navigate("logIn") },
-                navigateToSignUp = { navHostController.navigate("signUp") }
+                navigateToSignUp = { navHostController.navigate("signUp") },
+                navigateToEvent = {
+                    navHostController.navigate("event") {
+                        popUpTo("initial") { inclusive = true }
+                    }
+                },
+                auth = auth,
+                context = context
             )
         }
         composable("logIn") {

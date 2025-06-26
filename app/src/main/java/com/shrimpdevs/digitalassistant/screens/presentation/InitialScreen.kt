@@ -1,68 +1,148 @@
 package com.shrimpdevs.digitalassistant.screens.presentation
 
-import androidx.annotation.DrawableRes
+import android.app.Activity
+import android.content.Intent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
-import androidx.compose.ui.modifier.modifierLocalProvider
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.*
 import com.shrimpdevs.digitalassistant.R
-import androidx.compose.material3.Divider
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.layout.ContentScale
-import com.shrimpdevs.digitalassistant.ui.theme.BLueLight
-import com.shrimpdevs.digitalassistant.ui.theme.Black
-import com.shrimpdevs.digitalassistant.ui.theme.BlueDark
-import com.shrimpdevs.digitalassistant.ui.theme.DarkBlue
-import com.shrimpdevs.digitalassistant.ui.theme.DarkText
-import com.shrimpdevs.digitalassistant.ui.theme.Gray
-import com.shrimpdevs.digitalassistant.ui.theme.LightBlue
-import kotlin.math.round
+import com.shrimpdevs.digitalassistant.ui.theme.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
-@Preview
 @Composable
-fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignUp: () -> Unit = {}) {
+fun InitialScreen(
+    navigateToLogin: () -> Unit,
+    navigateToSignUp: () -> Unit,
+    navigateToEvent: () -> Unit,
+    auth: FirebaseAuth,
+    context: android.content.Context
+) {
+    val scope = rememberCoroutineScope()
+    val currentContext = LocalContext.current
+
+    // Google Sign In Configuration
+    val googleSignInClient = remember {
+        GoogleSignIn.getClient(
+            context,
+            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("TU_WEB_CLIENT_ID") // Reemplaza con tu ID de cliente web
+                .requestEmail()
+                .build()
+        )
+    }
+
+    // Google Sign In Launcher
+    val googleLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                scope.launch {
+                    try {
+                        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+                        auth.signInWithCredential(credential).await()
+                        navigateToEvent()
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            currentContext,
+                            "Error: ${e.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: ApiException) {
+                Toast.makeText(
+                    currentContext,
+                    "Error de Google Sign In: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    // Facebook Sign In Configuration
+    val callbackManager = remember { CallbackManager.Factory.create() }
+
+    LaunchedEffect(Unit) {
+        LoginManager.getInstance().registerCallback(
+            callbackManager,
+            object : FacebookCallback<LoginResult> {
+                override fun onSuccess(result: LoginResult) {
+                    scope.launch {
+                        try {
+                            val credential = FacebookAuthProvider.getCredential(result.accessToken.token)
+                            auth.signInWithCredential(credential).await()
+                            navigateToEvent()
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                currentContext,
+                                "Error: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+
+                override fun onCancel() {
+                    Toast.makeText(
+                        currentContext,
+                        "Inicio de sesión cancelado",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                override fun onError(error: FacebookException) {
+                    Toast.makeText(
+                        currentContext,
+                        "Error: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(DarkBlue, Black))),
         horizontalAlignment = Alignment.CenterHorizontally
-
-    ){
+    ) {
         Spacer(modifier = Modifier.weight(1f))
-        //Logo de la aplicacion y el nombre
+
         Image(
-            painter = painterResource(id =R.drawable.logo_da),
+            painter = painterResource(id = R.drawable.logo_da),
             contentDescription = "Logo de Aplicacion DA"
         )
         Text(
@@ -71,49 +151,36 @@ fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignUp: () -> Unit
             fontSize = 30.sp,
             fontWeight = FontWeight.Normal
         )
+
         Spacer(modifier = Modifier.weight(1f))
 
-
-        //Botones de inicio de sesion y registro
         Button(
             onClick = { navigateToLogin() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 35.dp, vertical = 5.dp)
                 .shadow(10.dp),
-            //Color de fondo del boton
             colors = ButtonDefaults.buttonColors(containerColor = DarkText),
-            // Establecer radio de borde
             shape = RoundedCornerShape(15.dp),
-            contentPadding = PaddingValues(
-                top = 15.dp,
-                bottom = 15.dp,
-            )
+            contentPadding = PaddingValues(vertical = 15.dp)
         ) {
-            Text(
-                text = "Iniciar Sesión", color = Color.White,
-            )
+            Text(text = "Iniciar Sesión", color = Color.White)
         }
-        //Spacer(modifier = Modifier.height(50.dp)) //Este espacio es experiemntal para la separacion de los botones
-        Button(onClick = { navigateToSignUp() },
+
+        Button(
+            onClick = { navigateToSignUp() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 35.dp, vertical = 5.dp)
                 .shadow(10.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BlueDark), //Color de fondo del boton
-            border = BorderStroke(1.dp, DarkBlue),//Color de borde
-            shape = RoundedCornerShape(15.dp),  // Establecer radio de borde
-            contentPadding = PaddingValues(
-                top = 15.dp,
-                bottom = 15.dp,
-            )
+            colors = ButtonDefaults.buttonColors(containerColor = BlueDark),
+            border = BorderStroke(1.dp, DarkBlue),
+            shape = RoundedCornerShape(15.dp),
+            contentPadding = PaddingValues(vertical = 15.dp)
         ) {
-            Text(
-                text = "Crear nueva cuenta", color = Color.White,
-            )
+            Text(text = "Crear nueva cuenta", color = Color.White)
         }
 
-        // Línea divisoria
         Divider(
             color = Color.White,
             thickness = 1.dp,
@@ -121,6 +188,7 @@ fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignUp: () -> Unit
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp, vertical = 32.dp)
         )
+
         Row(
             modifier = Modifier
                 .weight(1f)
@@ -130,12 +198,14 @@ fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignUp: () -> Unit
                     color = Gray,
                     shape = RoundedCornerShape(15.dp)
                 )
-                .background(Color.White,shape = RoundedCornerShape(15.dp)),
+                .background(Color.White, shape = RoundedCornerShape(15.dp)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Botón de GOogle
+            // Botón de Google
             Button(
-                onClick = { /*LOGIN con google*/ },
+                onClick = {
+                    googleLauncher.launch(googleSignInClient.signInIntent)
+                },
                 modifier = Modifier
                     .weight(1f)
                     .padding(12.dp, 12.dp, 6.dp, 12.dp)
@@ -154,7 +224,12 @@ fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignUp: () -> Unit
 
             // Botón de Facebook
             Button(
-                onClick = { /* LOGIN facebok */ },
+                onClick = {
+                    LoginManager.getInstance().logInWithReadPermissions(
+                        context as Activity,
+                        listOf("email", "public_profile")
+                    )
+                },
                 modifier = Modifier
                     .weight(1f)
                     .padding(6.dp, 12.dp, 12.dp, 12.dp)
@@ -171,7 +246,7 @@ fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignUp: () -> Unit
                 )
             }
         }
+
         Spacer(modifier = Modifier.weight(2f))
     }
 }
-
