@@ -2,6 +2,7 @@ package com.shrimpdevs.digitalassistant
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,6 +24,8 @@ fun NavigationWrapper(
     auth: FirebaseAuth,
     db: FirebaseFirestore
 ) {
+    val context = LocalContext.current
+
     LaunchedEffect(Unit) {
         if (auth.currentUser != null) {
             navHostController.navigate("event") {
