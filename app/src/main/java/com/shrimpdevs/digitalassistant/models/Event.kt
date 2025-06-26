@@ -2,6 +2,8 @@ package com.shrimpdevs.digitalassistant.models
 
 import com.google.firebase.Timestamp
 import java.io.Serializable
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 data class Event(
     var title: String = "",
@@ -9,4 +11,9 @@ data class Event(
     var eventDate: Timestamp = Timestamp.now(),
     var location: String = "",
     var alarm: Boolean = false
-) : Serializable
+) : Serializable {
+    fun getFormattedDate(): String {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        return dateFormat.format(eventDate.toDate())
+    }
+}

@@ -60,6 +60,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation("androidx.compose.material3:material3:1.2.1")
     //Firebase y google services dependencias
     implementation(platform("com.google.firebase:firebase-bom:32.8.0")) // Verifica la versión más reciente en Firebase docs
     implementation("com.google.firebase:firebase-auth-ktx")

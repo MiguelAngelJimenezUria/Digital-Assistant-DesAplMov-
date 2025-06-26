@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import com.shrimpdevs.digitalassistant.ui.theme.DarkBlue
 import com.shrimpdevs.digitalassistant.ui.theme.White
 
+/*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
@@ -38,3 +39,4 @@ fun CalendarScreen(
         }
     }
 }
+ */

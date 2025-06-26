@@ -1,76 +1,37 @@
 package com.shrimpdevs.digitalassistant.screens.event
 
-// Android SDK
-
-// Jetpack Compose UI
 import android.util.Log
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.unit.dp
-
-// Jetpack Compose Material & Material3
-
-// Jetpack Compose Foundation
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
-
-// Jetpack Compose Runtime
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf // Usar este en lugar de mutableIntStateOf si el tipo es genérico
-import androidx.compose.runtime.remember
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-
-// Bibliotecas de Terceros (Firebase)
-import com.google.firebase.Timestamp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.shrimpdevs.digitalassistant.R
 import com.shrimpdevs.digitalassistant.models.Event
+import com.shrimpdevs.digitalassistant.ui.theme.*
 
-// Importaciones del Proyecto
-import com.shrimpdevs.digitalassistant.ui.theme.Black
-import com.shrimpdevs.digitalassistant.ui.theme.DarkBlue
-
-import androidx.compose.material3.Icon
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.IconButton
-import androidx.compose.ui.graphics.Color
-import com.shrimpdevs.digitalassistant.service.db
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventScreen(
     db: FirebaseFirestore,
     navigateToCreateEvent: () -> Unit,
-    onEventClick: (Event) -> Unit  // Añadir este parámetro
+    navigateToInitial: () -> Unit,
+    onEventClick: (Event) -> Unit,
+    navigateToSettings: () -> Unit
 ) {
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var selectedIndex by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
         db.collection("events")
@@ -82,52 +43,127 @@ fun EventScreen(
 
                 val eventList = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(Event::class.java)
-                } ?: emptyList()
+                }?.sortedBy { it.eventDate.toDate() } ?: emptyList()
                 events = eventList
             }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(DarkBlue, Black)))
-            .padding(horizontal = 35.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.height(45.dp))
-        LazyColumn(
-            modifier = Modifier.weight(1f)
-        ) {
-            items(events) { event ->
-                EventCard(
-                    event = event,
-                    onEventClick = onEventClick  // Pasar la función al EventCard
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Eventos", color = White) },
+                navigationIcon = {
+                    IconButton(onClick = navigateToInitial) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Regresar",
+                            tint = White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* Aquí va la navegación a ajustes */ }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_settings),
+                            contentDescription = "Ajustes",
+                            tint = White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = DarkBlue
+                )
+            )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = DarkBlue,
+                contentColor = White
+            ) {
+                NavigationBarItem(
+                    selected = selectedIndex == 0,
+                    onClick = { selectedIndex = 0 },
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_event),
+                            contentDescription = "Inicio"
+                        )
+                    },
+                    label = { Text("Inicio") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = White,
+                        unselectedIconColor = White.copy(alpha = 0.5f),
+                        selectedTextColor = White,
+                        unselectedTextColor = White.copy(alpha = 0.5f),
+                        indicatorColor = DarkText
+                    )
+                )
+                NavigationBarItem(
+                    selected = selectedIndex == 1,
+                    onClick = { selectedIndex = 1 },
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_calendar),
+                            contentDescription = "Calendario"
+                        )
+                    },
+                    label = { Text("Calendario") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = White,
+                        unselectedIconColor = White.copy(alpha = 0.5f),
+                        selectedTextColor = White,
+                        unselectedTextColor = White.copy(alpha = 0.5f),
+                        indicatorColor = DarkText
+                    )
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = navigateToCreateEvent,
+                containerColor = DarkText,
+                contentColor = White
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.create_icon),
+                    contentDescription = "Crear evento"
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp)
-                .shadow(10.dp),
-            onClick = { navigateToCreateEvent() }
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(DarkBlue, Black)))
+                .padding(paddingValues)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.create_icon),
-                contentDescription = "Crear evento",
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Crear Evento")
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(vertical = 8.dp)
+            ) {
+                items(events) { event ->
+                    EventCard(
+                        event = event,
+                        onEventClick = onEventClick,
+                        onDeleteClick = { deleteEvent(db, event.title) }
+                    )
+                }
+            }
         }
-        Spacer(modifier = Modifier.height(45.dp))
     }
 }
 
 @Composable
-fun EventCard(event: Event, onEventClick: (Event) -> Unit) {
+fun EventCard(
+    event: Event,
+    onEventClick: (Event) -> Unit,
+    onDeleteClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -155,12 +191,13 @@ fun EventCard(event: Event, onEventClick: (Event) -> Unit) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(text = event.description)
+                    Text(text = event.getFormattedDate())
                     Text(text = "Ubicación: ${event.location}")
                     Text(text = "Alarma: ${if (event.alarm) "Activada" else "Desactivada"}")
                 }
 
                 IconButton(
-                    onClick = { deleteEvent(db, event.title) }
+                    onClick = onDeleteClick
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_delete),
@@ -172,6 +209,7 @@ fun EventCard(event: Event, onEventClick: (Event) -> Unit) {
         }
     }
 }
+
 private fun deleteEvent(db: FirebaseFirestore, title: String) {
     db.collection("events")
         .whereEqualTo("title", title)
