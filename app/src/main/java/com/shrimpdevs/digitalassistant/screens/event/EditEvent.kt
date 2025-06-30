@@ -18,7 +18,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.shrimpdevs.digitalassistant.R
 import com.shrimpdevs.digitalassistant.models.Event
 import com.shrimpdevs.digitalassistant.ui.theme.*
+import androidx.compose.material3.*
+import androidx.compose.foundation.layout.*
+import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
+import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditEvent(
     db: FirebaseFirestore,
@@ -29,6 +35,78 @@ fun EditEvent(
     var description by remember { mutableStateOf(event.description) }
     var location by remember { mutableStateOf(event.location) }
     var alarm by remember { mutableStateOf(event.alarm) }
+    var selectedDate by remember { mutableStateOf(Calendar.getInstance().apply {
+        time = event.eventDate.toDate()
+    }) }
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDatePicker = false
+                    showTimePicker = true
+                }) {
+                    Text("Confirmar")
+                }
+            }
+        ) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = selectedDate.timeInMillis
+            )
+            DatePicker(state = datePickerState)
+            LaunchedEffect(datePickerState.selectedDateMillis) {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    selectedDate.timeInMillis = millis
+                }
+            }
+        }
+    }
+
+    if (showTimePicker) {
+        BasicAlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = 6.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val timePickerState = rememberTimePickerState(
+                        initialHour = selectedDate.get(Calendar.HOUR_OF_DAY),
+                        initialMinute = selectedDate.get(Calendar.MINUTE)
+                    )
+                    TimePicker(state = timePickerState)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showTimePicker = false }) {
+                            Text("Cancelar")
+                        }
+                        TextButton(
+                            onClick = {
+                                selectedDate.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                selectedDate.set(Calendar.MINUTE, timePickerState.minute)
+                                showTimePicker = false
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -82,6 +160,17 @@ fun EditEvent(
             )
         )
 
+        Button(
+            onClick = { showDatePicker = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = BackgroundTextField)
+        ) {
+            val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            Text("Fecha y Hora: ${dateFormat.format(selectedDate.time)}")
+        }
+
         TextField(
             value = location,
             onValueChange = { location = it },
@@ -113,7 +202,7 @@ fun EditEvent(
                 val updatedEvent = Event(
                     title = title,
                     description = description,
-                    eventDate = event.eventDate,
+                    eventDate = Timestamp(selectedDate.time),
                     location = location,
                     alarm = alarm
                 )

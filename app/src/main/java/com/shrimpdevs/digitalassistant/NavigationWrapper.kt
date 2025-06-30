@@ -1,6 +1,8 @@
 package com.shrimpdevs.digitalassistant
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,8 +16,7 @@ import com.shrimpdevs.digitalassistant.screens.event.EventScreen
 import com.shrimpdevs.digitalassistant.screens.presentation.InitialScreen
 import com.shrimpdevs.digitalassistant.screens.presentation.LoginScreen
 import com.shrimpdevs.digitalassistant.screens.presentation.SignUpScreen
-import kotlin.text.get
-import kotlin.text.set
+import com.shrimpdevs.digitalassistant.screens.settings.SettingsScreen
 
 @Composable
 fun NavigationWrapper(
@@ -23,12 +24,28 @@ fun NavigationWrapper(
     auth: FirebaseAuth,
     db: FirebaseFirestore
 ) {
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        if (auth.currentUser != null) {
+            navHostController.navigate("event") {
+                popUpTo("initial") { inclusive = true }
+            }
+        }
+    }
 
     NavHost(navController = navHostController, startDestination = "initial") {
         composable("initial") {
             InitialScreen(
                 navigateToLogin = { navHostController.navigate("logIn") },
-                navigateToSignUp = { navHostController.navigate("signUp") }
+                navigateToSignUp = { navHostController.navigate("signUp") },
+                navigateToEvent = {
+                    navHostController.navigate("event") {
+                        popUpTo("initial") { inclusive = true }
+                    }
+                },
+                auth = auth,
+                context = context
             )
         }
         composable("logIn") {
@@ -51,12 +68,14 @@ fun NavigationWrapper(
             EventScreen(
                 db = db,
                 navigateToCreateEvent = { navHostController.navigate("CreateEvent") },
-                onEventClick = { event: Event ->  // Especificar el tipo explícitamente
+                navigateToInitial = { navHostController.navigate("initial") },
+                navigateToSettings = { navHostController.navigate("Settings") },
+                onEventClick = { event: Event ->
                     navHostController.currentBackStackEntry?.savedStateHandle?.set(
-                        key = "event",  // Especificar el key
-                        value = event   // Especificar el value
+                        key = "event",
+                        value = event
                     )
-                    navHostController.navigate("editEvent")
+                    navHostController.navigate("EditEvent")
                 }
             )
         }
@@ -75,6 +94,12 @@ fun NavigationWrapper(
                     navigateBack = { navHostController.navigate("event") }
                 )
             }
+        }
+        composable("Settings") {
+            SettingsScreen(
+                navigateBack = { navHostController.navigate("event") },
+                navHostController = navHostController
+            )
         }
     }
 }
