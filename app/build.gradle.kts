@@ -70,4 +70,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     // Facebook Sign In
     implementation("com.facebook.android:facebook-login:16.3.0")
+    // Notificaciones
+    implementation("androidx.core:core-ktx:1.16.0")
 }

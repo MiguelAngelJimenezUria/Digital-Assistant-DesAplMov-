@@ -82,7 +82,8 @@ fun NavigationWrapper(
         composable ("CreateEvent"){
             CreateEvent(
                 db,
-                navigateToEvent = { navHostController.navigate("event") }
+                navigateToEvent = { navHostController.navigate("event") },
+                context = LocalContext.current
             )
         }
         composable("editEvent") {

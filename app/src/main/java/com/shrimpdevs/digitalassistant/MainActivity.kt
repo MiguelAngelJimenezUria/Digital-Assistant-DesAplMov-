@@ -48,7 +48,6 @@ class MainActivity : ComponentActivity() {
         val currentUser: FirebaseUser? = auth.currentUser
         if (currentUser != null) {
             Log.i("dnis", "Estoy logueado")
-
             auth.signOut()
         } else {
         }

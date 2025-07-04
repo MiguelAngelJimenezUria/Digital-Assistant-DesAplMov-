@@ -1,5 +1,8 @@
 package com.shrimpdevs.digitalassistant.screens.event
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,24 +56,29 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.shrimpdevs.digitalassistant.notifications.NotificationHelper
+import com.shrimpdevs.digitalassistant.notifications.RequestNotificationPermission
 import com.shrimpdevs.digitalassistant.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateEvent(db: FirebaseFirestore, navigateToEvent: () -> Unit) {
+fun CreateEvent(db: FirebaseFirestore,context: Context, navigateToEvent: () -> Unit) {
+    RequestNotificationPermission()
+    val context=LocalContext.current
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var alarm by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(Calendar.getInstance()) }
-
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+
 
     if (showDatePicker) {
         DatePickerDialog(
@@ -236,7 +244,8 @@ fun CreateEvent(db: FirebaseFirestore, navigateToEvent: () -> Unit) {
                     location = location,
                     alarm = alarm
                 )
-                createEvent(db, event, navigateToEvent)
+                createEvent(db, event, context, navigateToEvent)
+
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -249,11 +258,25 @@ fun CreateEvent(db: FirebaseFirestore, navigateToEvent: () -> Unit) {
     }
 }
 
-private fun createEvent(db: FirebaseFirestore, event: Event, onSuccess: () -> Unit) {
+
+private fun createEvent(
+    db: FirebaseFirestore,
+    event: Event,
+    context: Context,
+    onSuccess: () -> Unit
+) {
     db.collection("events")
         .add(event)
         .addOnSuccessListener {
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            // Lanza notificación
+            NotificationHelper.showNotification(
+                context,
+                "Evento creado: ${event.title}",
+                "Fecha: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(event.eventDate.toDate())}"
+            )
+
+            // Navega después de medio segundo (puedes quitar el delay si quieres)
+            Handler(Looper.getMainLooper()).postDelayed({
                 onSuccess()
             }, 500)
         }
